@@ -1,0 +1,99 @@
+\documentclass{article}
+\title{Funktionale Programmierung Mitschrieb}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\usepackage{enumerate}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\fancyhf{}
+\fancyhead[C]{Torsten Grust - Functional Pro}
+\usepackage{fontspec}
+\setmonofont{Andale Mono}
+\usepackage[ngerman]{babel}
+\author{Finn Ickler}
+\usepackage{epigraph}
+\usepackage{minted}
+\renewcommand{\listingscaption}{Codebeispiel}
+\setcounter{secnumdepth}{-1}
+\begin{document}
+\maketitle
+\epigraph{\glqq Avoid sucess at all cost \grqq}{Simon Peyton Jones}
+\listoflistings
+\section{Vorlesung 1}
+\begin{listing}
+\caption{Hello World}
+\begin{minted}{haskell}
+-- Hello World Haskell
+main :: IO ()
+main = putStrLn "Chewie, we're home"
+\end{minted}
+\end{listing}
+\subsection{Functional Programming (FP)}
+A programming language is a medium for expressive ideas (not to get a computer to perform operations ). Thus programs must be written for people to read, and only incidentally for machines.
+\subsection{Computational Model in FP : \emph{Reduction}}
+Replace expressions by their value.\\
+IN FP, expressions are formed by applying functions to values.
+\begin{enumerate}
+\item Function as in maths: $x = y \rightarrow f(x) = f(y)$
+\item Functions are values like numbers or text
+\end{enumerate}
+\begin{tabular}{l|c|c}
+&FP&Imperative\\
+construction & function application and composition & statement sequencing\\
+execution & reduction (expression evaluation) & state changes\\
+sementics & $\lambda$-calculus&denotational
+\end{tabular}\bigskip\\
+$ n \in \mathbb{N}, n \geq 2$ is a prime number $\Leftrightarrow$ the set of non-trivial factors of n is empty.\\
+$n$ is prime $\Leftrightarrow \{ m \mid m \in m \in \{2,\ldots,n-1\}, n mod m = 0 \} = \{\}$\\
+Imperativ: C
+\begin{minted}{c}
+int IsPrime(int n)
+{
+    int m;
+    int found_factor;
+    found_factor
+    for (m = 2; m <= n -1; m++)
+    {
+        if (n % m == 0)
+        {
+            found_factor = 1 ;
+            break;
+        }
+    }
+    return !found_factor;
+}
+\end{minted}
+Functional: Haskell
+\begin{minted}{Haskell}
+isPrime :: Integer -> Bool
+isPrime n = factors n == []
+  where 
+    factors :: Integer -> [Integer]
+    factors n = [ m ] | m <- [2..n-1], mod n m == 0]
+
+main :: IO ()
+main = do
+  let n =42
+  print (isPrime n)
+\end{minted}
+Assume : n = 55555, durch Lazy evaluation, genauso effizient.\\
+Beispiel \emph{ghci} Lazy evaluation
+\begin{minted}{Haskell}
+let xs = [ x+1 | x <- [0..9] ]
+:sprint xs = _
+length xs
+:sprint xs = [_,_,_,_,_,_,_,_,_]
+\end{minted}
+\subsection{Haskell Ramp Up}
+Read $\equiv$ as ''denotes the same value as''\\
+Apply f to value e:\quad f \textvisiblespace e (juxtaposition, ''apply'', binary operator \textvisiblespace, Haskell speak: infixL 10 \textvisiblespace)
+= \textvisiblespace has max precedere (10): f $e_1$ +$e_2 \equiv $(f $e_1$) + $e_2$
+\textvisiblespace associates to the left g \textvisiblespace f \textvisiblespace e $\equiv$ (g f) e
+Fonction composition:
+\begin{enumerate}[-]
+\item g (f e)
+\item Operator ''.'' (''after'') : (g.f) e (. = $\circ$)
+\item Alternative ''apply'' operator \$ (lowest precedure, associates to the right), infix 0\$): f\$$e_1$+ $e_2$ = f ($e_1 + e_2$)
+\end{enumerate}
+\end{document}
