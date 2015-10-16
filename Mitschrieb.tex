@@ -46,7 +46,7 @@ sementics & $\lambda$-calculus&denotational
 \end{tabular}\bigskip\\
 $ n \in \mathbb{N}, n \geq 2$ is a prime number $\Leftrightarrow$ the set of non-trivial factors of n is empty.\\
 $n$ is prime $\Leftrightarrow \{ m \mid m \in m \in \{2,\ldots,n-1\}, n mod m = 0 \} = \{\}$\\
-Imperativ: C
+\begin{listing}[h!]
 \begin{minted}{c}
 int IsPrime(int n)
 {
@@ -64,7 +64,9 @@ int IsPrime(int n)
     return !found_factor;
 }
 \end{minted}
-Functional: Haskell
+\caption{isPrime in C}
+\end{listing}
+\begin{listing}[h!]
 \begin{minted}{Haskell}
 isPrime :: Integer -> Bool
 isPrime n = factors n == []
@@ -77,14 +79,21 @@ main = do
   let n =42
   print (isPrime n)
 \end{minted}
-Assume : n = 55555, durch Lazy evaluation, genauso effizient.\\
-Beispiel \emph{ghci} Lazy evaluation
-\begin{minted}{Haskell}
+\caption{isPrime in Haskell}
+\end{listing}
+\newpage
+\usemintedstyle[Haskell]{bw}
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\begin{listing}[h!]
+\begin{minted}[bgcolor=bg]{Haskell}
 let xs = [ x+1 | x <- [0..9] ]
 :sprint xs = _
 length xs
 :sprint xs = [_,_,_,_,_,_,_,_,_]
 \end{minted}
+\caption{Lazy Evaluation in der ghci REPL}
+\end{listing}
+\usemintedstyle[Haskell]{default}
 \subsection{Haskell Ramp Up}
 Read $\equiv$ as ''denotes the same value as''\\
 Apply f to value e:\quad f \textvisiblespace e (juxtaposition, ''apply'', binary operator \textvisiblespace, Haskell speak: infixL 10 \textvisiblespace)
