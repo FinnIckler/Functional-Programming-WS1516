@@ -7,14 +7,15 @@
 \usepackage{amsfonts}
 \usepackage{amssymb}
 \fancyhf{}
-\fancyhead[C]{Torsten Grust - Functional Pro}
+\fancyhead[C]{Torsten Grust - Functional Programming}
 \usepackage{fontspec}
 \setmonofont{Andale Mono}
-\usepackage[ngerman]{babel}
+\usepackage[english]{babel}
 \author{Finn Ickler}
 \usepackage{epigraph}
 \usepackage{minted}
 \renewcommand{\listingscaption}{Codebeispiel}
+\newcommand{\Haskell}[1]{\mintinline{Haskell}{#1}}
 \setcounter{secnumdepth}{-1}
 \begin{document}
 \maketitle
@@ -96,13 +97,158 @@ length xs
 \usemintedstyle[Haskell]{default}
 \subsection{Haskell Ramp Up}
 Read $\equiv$ as ''denotes the same value as''\\
-Apply f to value e:\quad f \textvisiblespace e (juxtaposition, ''apply'', binary operator \textvisiblespace, Haskell speak: infixL 10 \textvisiblespace)
+Apply f to value e:\quad f \textvisiblespace e \\(juxtaposition, ''apply'', binary operator \textvisiblespace, Haskell speak: infixL 10 \textvisiblespace)
 = \textvisiblespace has max precedere (10): f $e_1$ +$e_2 \equiv $(f $e_1$) + $e_2$
 \textvisiblespace associates to the left g \textvisiblespace f \textvisiblespace e $\equiv$ (g f) e
-Fonction composition:
+Function composition:
 \begin{enumerate}[-]
 \item g (f e)
-\item Operator ''.'' (''after'') : (g.f) e (. = $\circ$)
+\item Operator ''.'' (''after'') : (g.f) e (. = $\circ$) = g(f (e))
 \item Alternative ''apply'' operator \$ (lowest precedure, associates to the right), infix 0\$): f\$$e_1$+ $e_2$ = f ($e_1 + e_2$)
 \end{enumerate}
+\section{Vorlesung 2}
+\begin{listing}
+\caption{Verschiedene Schreibweise einer Applikation}
+\begin{minted}[bgcolor=bg]{Haskell}
+cos 2 * pi
+cos (2 * pi)
+cos $ 2 * pi
+isLetter (head (reverse ("It's a " ++ "Trap")))
+(isLetter . head . reverse ) ("It's a" ++ "Trap")
+isLetter $ head $ reverse $ "It's a" ++ "Trap"
+\end{minted}
+\end{listing}
+\noindent Prefix application of binary infix operator $\oplus$
+\begin{minted}[escapeinside=||]{Haskell}
+(|$\oplus) e_1 e_2 \equiv e_1 \oplus e_2$|
+|$(\&\&)$| True False |$\equiv$| False
+\end{minted}
+Infix application of binary function f:
+\begin{minted}[escapeinside=||]{Haskell}
+|$e_1$| `f` |$e_2$| |$\equiv$| f |$e_1 e_2$|
+x `elem` xs |$\equiv$| x |$\in$| xs
+\end{minted}
+User defined operators with characters : \mintinline{Haskell}|!#%&*+/<=>?@\^|~|
+\begin{listing}
+\caption{Eigener $\approx$ Opperator}
+\begin{minted}{Haskell}
+epsilon :: Double
+epsilon = 0.00001
+(~=~) :: Double -> Double -> Bool
+x ~=~ y = abs (x - y) < epsilon
+infix 4 ~=~ 
+\end{minted}
+\end{listing}
+\subsection{Values and Types}
+Read \mintinline{Haskell}|::| as ''has type''\\
+Any Haskell value e has a type t (\mintinline{Haskell}{e::t}) that is determined at compile time.\\
+The \mintinline{Haskell}|::| type assignement is either given explicitly or inferred by the computer
+\subsection{Types}
+\begin{tabular}{lll}
+Type&Description&Value\\
+\hline
+Int & fixed precision integers ($-2^{63}\ldots2^{63}-1$)&\Haskell{0,1,42}\\
+Integer & arbitrary Precision integers & \Haskell{0,10^100}\\
+Float,Double & Single/Double precision floating points & \Haskell{0.1,1e03}\\
+Char & Unicode Character&\mintinline[escapeinside=||]{Haskell}{'x','\t', '△', '\8710'}\\
+Bool & Booleans & \mintinline[escapeinside=||]{Haskell}{True, False}\\
+() & Unit (single-value type) & \mintinline[escapeinside=||]{Haskell}{()}
+\end{tabular}
+\begin{minted}[bgcolor =bg]{Haskell}
+2
+it :: Integer
+42 :: Int 
+it :: Int
+'a' 
+it :: Char
+True 
+it :: Bool
+10^100 
+it :: Integer
+10^100 :: Double 
+it :: Double
+\end{minted}
+\subsection{Type Constructors}
+\begin{itemize}
+\item Build new types from existing Types
+\item Let a,b denote arbitrary Types (type variables)
+\end{itemize}
+\begin{tabular}{lp{6cm}l}
+Type Constructor& Description & Values\\
+\hline
+(a,b)&pairs of values of types a and b& \Haskell{(1,True) :: (Int, Bool)}\\
+($\text{a}_1,\text{a}_2,\ldots,\text{a}_n$)& n-Types& \Haskell{2,False :: (Int, Bool)}\\
+\lbrack a\rbrack &list of values of type a & \Haskell{[] :: [a]}\\
+\Haskell{Maybe} a & optional value of type a & \Haskell{Just 42 Maybe Integer}\\
+& & \Haskell{Nothing :: Maybe a}\\
+\Haskell{Either} a b & Choice between values of Type a and b& \Haskell{Left 'x' :: Either Char b}\\
+& & \Haskell{Right pi :: Either a Double}\\
+\Haskell{IO} a & I/O action that returns a value of type a (can habe side effects ) & \Haskell{print 42 :: IO} ()\\
+& & \Haskell{getChar :: IO Char}\\
+a \Haskell{->} b & function from type a to b & \Haskell{isLetter :: Char -> Bool}
+\end{tabular}
+\begin{minted}[bgcolor=bg]{Haskell}
+(1, '1', 1.0)
+it :: (Integer, Char, Double)
+[1, '1', 1.0]
+it :: Fehler
+[0.1,1.0,0.01] 
+it :: [Double]
+[]
+it :: [t]
+"Yoda"
+it :: [Char]
+['Y', 'o', 'd', 'a']
+"Yoda"
+[Just 0, Nothing, Just 2] 
+it :: [Maybe Integer]
+[Left True, Right 'a']
+it :: [Either Bool Char]
+print 'x' 
+it :: ()
+getChar
+*
+it :: Char
+:t getChar
+getChar :: Io Char
+:t fst 
+fst :: (a,b) -> a
+:t snd
+snd :: (a,b) -> b
+:t head
+head :: [a] -> a
+:t (++)
+(++) :: [a] -> [a] -> [a]
+\end{minted}
+\subsection{Currying}
+\begin{itemize}
+\item Recall:\begin{enumerate}
+\item $e_1$ \Haskell{++} $e_2 \equiv$ \Haskell{(++)} $e_1 e_2$
+\item \Haskell{++} $e_1 e_2 \equiv$ \Haskell{((++)} $e_1) e_2$
+\end{enumerate}
+\item Function application happens one argument at a time (currying, Haskell B. Curry)
+\item Type of n-ary function: : $a_1$ \Haskell{->} $a_2$ \Haskell{... ->} $a_n$ \Haskell{-> b}
+\item Type constructor \Haskell{->} associates to the right thus read the type as:\\ $a_1$ \Haskell{->} ($a_2$ \Haskell{->} $a_3$ (\Haskell{... ->} ($a_n$ \Haskell{-> b})\ldots))
+\item Enables partial application: ''Give me a value of type $a_1$, I'll give you a (n-1)-ary function of type $a_2$ \Haskell{->} $a_3$ \Haskell{-> ... ->} $a_n$ \Haskell{-> b}
+\end{itemize}
+\begin{minted}[bgcolor = bg]{Haskell}
+"Chew" ++ "bacca"
+"Chewbacca"
+(++) "Chew" "bacca"
+"Chewbacca"
+((++) "Chew") "bacca"
+"Chewbacca"
+:t (++) "Chew"
+"Chew" :: [Char] -> [Char]
+let chew = (++) "Chew"
+chew "bacca"
+"Chewbacca"
+let double (*) 2
+double 21
+42
+\end{minted}
+\subsection{Defining Values (and thus: Functions)}
+\begin{itemize}
+\item = binds naems to values, names must not start with A-Z (Haskell style: camelCase)
+\end{itemize}
 \end{document}
