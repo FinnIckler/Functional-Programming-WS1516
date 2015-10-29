@@ -19,7 +19,7 @@
 \setcounter{secnumdepth}{-1}
 \begin{document}
 \maketitle
-\epigraph{\glqq Avoid sucess at all cost \grqq}{Simon Peyton Jones}
+\epigraph{\glqq Avoid success at all cost \grqq}{Simon Peyton Jones}
 \listoflistings
 \section{Vorlesung 1}
 \begin{listing}
@@ -43,7 +43,7 @@ IN FP, expressions are formed by applying functions to values.
 &FP&Imperative\\
 construction & function application and composition & statement sequencing\\
 execution & reduction (expression evaluation) & state changes\\
-sementics & $\lambda$-calculus&denotational
+semantics & $\lambda$-calculus&denotational
 \end{tabular}\bigskip\\
 $ n \in \mathbb{N}, n \geq 2$ is a prime number $\Leftrightarrow$ the set of non-trivial factors of n is empty.\\
 $n$ is prime $\Leftrightarrow \{ m \mid m \in m \in \{2,\ldots,n-1\}, n mod m = 0 \} = \{\}$\\
@@ -98,13 +98,13 @@ length xs
 \subsection{Haskell Ramp Up}
 Read $\equiv$ as ''denotes the same value as''\\
 Apply f to value e:\quad f \textvisiblespace e \\(juxtaposition, ''apply'', binary operator \textvisiblespace, Haskell speak: infixL 10 \textvisiblespace)
-= \textvisiblespace has max precedere (10): f $e_1$ +$e_2 \equiv $(f $e_1$) + $e_2$
+= \textvisiblespace has max precedence (10): f $e_1$ +$e_2 \equiv $(f $e_1$) + $e_2$
 \textvisiblespace associates to the left g \textvisiblespace f \textvisiblespace e $\equiv$ (g f) e
 Function composition:
 \begin{enumerate}[-]
 \item g (f e)
 \item Operator ''.'' (''after'') : (g.f) e (. = $\circ$) = g(f (e))
-\item Alternative ''apply'' operator \$ (lowest precedure, associates to the right), infix 0\$): f\$$e_1$+ $e_2$ = f ($e_1 + e_2$)
+\item Alternative ''apply'' operator \$ (lowest precedence, associates to the right), infix 0\$): f\$$e_1$+ $e_2$ = f ($e_1 + e_2$)
 \end{enumerate}
 \section{Vorlesung 2}
 \begin{listing}
@@ -142,7 +142,7 @@ infix 4 ~=~
 \subsection{Values and Types}
 Read \mintinline{Haskell}|::| as ''has type''\\
 Any Haskell value e has a type t (\mintinline{Haskell}{e::t}) that is determined at compile time.\\
-The \mintinline{Haskell}|::| type assignement is either given explicitly or inferred by the computer
+The \mintinline{Haskell}|::| type assignment is either given explicitly or inferred by the computer
 \subsection{Types}
 \begin{tabular}{lll}
 Type&Description&Value\\
@@ -247,8 +247,175 @@ let double (*) 2
 double 21
 42
 \end{minted}
+\section{Vorlesung 3}
 \subsection{Defining Values (and thus: Functions)}
 \begin{itemize}
-\item = binds naems to values, names must not start with A-Z (Haskell style: camelCase)
+\item = binds names to values, names must not start with A-Z (Haskell style: camelCase)
+\item Define constant (0-ary) c, value of c is that of expression:\\
+c = e
+\item Define n-ary function, arguments $x_i$ and f may occur in e (no "letrec" needed)\\
+f $x_1\ x_2\ldots x_n = e$
+\item Hskell programm = set of top-level bindings (order immaterial, no rebinding)
+\item Good style: give type assignment for top-level bindings:\\
+\Haskell{f :: a1 -> a2 -> b}\\
+\Haskell{f } $x_1$ $x_2$ \Haskell{= e}
+\begin{listing}[h!]
+\caption{fac in Haskell}
+\begin{minted}{Haskell}
+fac :: Integer -> Integer
+fac n = if n <= 1 then 1 else n * fac (n - 1)
+
+fac2 n | n <= 1    = 1
+       | otherwise = n * fac2 (n - 1)
+
+main :: IO ()
+main = print $ fac 10
+\end{minted}
+\end{listing}
+\item Guards (introduced by $\vert$).
+\begin{minted}[escapeinside=@@]{Haskell}
+f @$x_1\ x_2\ \ldots\ x_n$@
+  |@$q_1$@ = @$e_1$@
+  |@$q_2$@ = @$e_n$@
+\end{minted}
+\begin{listing}[h!]
+\caption{Power in Haskell}
+\begin{minted}{Haskell}
+power :: Double -> Integer -> Double
+power x k | k == 1 = x
+          | even k = power (x * x) (halve k)
+          | otherwise = x * power (x * x) (halve k)
+  where
+    even :: Integer -> Bool -- Nicht typisch
+    even n  = n `mod` 2 == 0
+    halve n = n `div` 2
+
+main :: IO ()
+main = print $ power 2 16 
+\end{minted}
+\end{listing}
+\item $q_i$ (expressions of type Bool) evaluated top to bottom, first True guards ''wins''\\
+$\mathrm{fac}\ n = \begin{cases}
+1 &if n \geq 1\\
+n \cdot \mathrm{fac(n-1)}& else
+\end{cases}$\\
+\end{itemize}
+\subsection{Lokale Definitionen}
+\begin{enumerate}
+\item \Haskell{where} - binding : Local definitions visible in the entire right-hand-side (rhs) of a definition
+\begin{minted}[escapeinside=@@]{Haskell}
+f @$x_1\ x_2\ \ldots\ x_n$@
+  |@$q_1$@ = @$e_1$@
+  |@$q_2$@ = @$e_n$@
+ where 
+    @$g_1$@ ... = @$b_1$@
+    @$g_i$@ ... = @$b_i$@
+\end{minted}
+\item \Haskell{let} - expression Local definitions visible inside an expression:
+\begin{minted}[escapeinside=@@]{Haskell}
+let @$g_1$@ ... = @$b_1$@
+    @$g_2$@ ... = @$b_1$@
+in e
+\end{minted}
+%TODO Aus dem Forum Einrückung aufschreiben
+\end{enumerate}
+\subsection{Lists([a])}
+\begin{itemize}
+\item Recursive definition:
+\begin{enumerate}
+\item\Haskell{[]} ist a list (nil), type \Haskell{[] :: [a]}
+\item\Haskell{x : xs} (head, tail) is a list, if \Haskell{x :: a}, and \Haskell{xs :: [a]}.\\
+\phantom{ }\quad \Haskell{cons: (:) :: a -> [a] -> [a] -> [a]} with \Haskell{infixr : 5}
+\end{enumerate}
+\item Notation: \Haskell{3:(2:1:[])} $\equiv$ \Haskell{3:2:1:[]} $\equiv$ \Haskell{[3,2,1]}
+\end{itemize}
+\begin{minted}[bgcolor =bg]{Haskell}
+[]
+it :: [t]
+[1]
+it :: [Integer]
+[1,2,3]
+it :: [Integer]
+['z']
+"z"
+it :: [Char]
+['z','x']
+"zx"
+it :: [Char]
+[] == ""
+True
+it :: Bool
+[[1],[2,3]]
+it :: [[Integer]]
+[[1],[2,3],[]]
+[[1],[2,3]]
+it :: [[Integer]]
+False:[]
+[False]
+it :: [Bool]
+(False:[]):[]
+it ::[[Bool]]
+:t [(<),(<=),(>)]
+[(<),(<=),(>)] :: Ord a => [a -> a-> Bool]
+[(1,"one"),(2,"two"),(3,"three")]
+it :: [(Integer,[Char])]
+:t head
+head :: [a] -> a
+:t tail :: [a] -> [a]
+head "It's a trap"
+'I'
+it :: Char
+tail  "It's a trap"
+"t's a trap"
+it :: [Char]
+reverse "Never odd or even"
+"neve ro ddo reveN"
+it :: [Char]
+\end{minted}
+\begin{itemize}
+\item Law
+$\forall $\texttt{xs}$ \ne$\Haskell{[]}: \Haskell{head xs : tail} = \texttt{xs}
+\end{itemize}
+\begin{minted}[bgcolor =bg]{Haskell}
+:i String
+type String = [Char]
+\end{minted}
+\subsection{Type Synonyms}
+\begin{itemize}
+\item Introduce your own type synonyms. (type names : {\em U}ppercase)
+\Haskell{type} $t_1$ \Haskell{=} $t_2$
+\end{itemize}
+\begin{minted}{Haskell}
+type Bits = [Integer]
+
+type Predicate a = a -> Bool
+
+bits :: Integer -> Bits
+bits n | n == 0    =[0]
+       | otherwise = (n `mod` 2) : bits (n `div`2)
+
+isEven :: Predicate Integer
+isEven n = head (bits n) == 0
+
+main :: IO ()
+main = print $ isEven 35
+\end{minted}
+Sequence (lists of enumerable elements)
+\begin{itemize}
+\item \Haskell{[x..y]} $\equiv$ \Haskell{[x,x+1,x+2,...,y]}
+
+\begin{minted}[bgcolor= bg]{Haskell}
+['a'..'z']
+"abcdefghijklmnopqrstuvwxyz"
+\end{minted}
+\item \Haskell{x,s..y}$\equiv$ \Haskell{[x,x+i,x+(2*i),...,y] where i = x-s}
+
+\begin{minted}[bgcolor= bg]{Haskell}
+[1,3..20]
+[1,3,5,7,9,11,13,15,17,19]
+[2,4..20]
+[2,4,6,8,10,12,14,16,18,20]
+\end{minted}
+\item Infinite List \Haskell{[1..]}
 \end{itemize}
 \end{document}
