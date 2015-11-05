@@ -14,12 +14,13 @@
 \author{Finn Ickler}
 \usepackage{epigraph}
 \usepackage{minted}
-\renewcommand{\listingscaption}{Codebeispiel}
+\renewcommand{\listingscaption}{Code example}
 \newcommand{\Haskell}[1]{\mintinline{Haskell}{#1}}
 \setcounter{secnumdepth}{-1}
 \begin{document}
 \maketitle
 \epigraph{\glqq Avoid success at all cost \grqq}{Simon Peyton Jones}
+\tableofcontents
 \listoflistings
 \section{Vorlesung 1}
 \begin{listing}
@@ -317,7 +318,42 @@ let @$g_1$@ ... = @$b_1$@
     @$g_2$@ ... = @$b_1$@
 in e
 \end{minted}
-%TODO Aus dem Forum Einrückung aufschreiben
+%\begin{verbatim}
+%Hallo zusammen,
+%in der dritten Vorlesung hatte ich erwähnt, dass Haskells Syntax
+%darauf verzichtet, Blöcke (von Definitionen) mittels Sonderzeichen 
+%abzugrenzen und zu strukturieren.  Andere Programmiersprachen bedienen sich hier typischerweise Zeichen wie {, } und ;.
+%Haskell baut hingegen auf das sog. Layout, eine Art 2-dimensionaler Syntax.  Wer schon einmal Python und seine Konventionen zur Einrückung von Blöcken hinter for und if kennengelernt hat, wird hier Parallelen sehen. 
+%Die Regelungen zu Layout lauten wie folgt und werden vom Haskell-Compiler während der Parsing-Phase angewandt:
+%The first token after a where/let and the first token of a top-level definition define the upper-left corner of a box.
+%The first token left of the box closes the box (offside rule).
+%Insert a { before the box.
+%Insert a } after the box.
+%Insert a ; before each line that starts at left box border.
+%Die Anwendung dieser Regeln auf dieses Beispielprogramm:
+%let y   = a * b       
+%    f x = (x + y) / y 
+%in  f c + f d
+%führt zur Identifikation der folgenden Box:
+%   ┌──────────┄┄     
+%let│y   = a * b      
+%   │f x = (x + y) / y
+%   └──────────┄┄     
+%in  f c + f d        
+%Das Token in in der letzten Zeile steht links von der Boxgrenze im Abseits (siehe die offside rule).  Der Parser führt nun die Zeichen {, } und ; ein und verarbeitet das Programm so, als ob der Programmierer diese Zeichen explizit angegeben hätte.  (Haskell kann alternativ übrigens auch in dieser sog. expliziten Syntax geschrieben werden — das ist aber sehr unüblich, hat negativen Einfluss aufs Karma und ist vor allem für den Einsatz in automatischen Programmgeneratoren gedacht.)
+%Die explizite Form des obigen Programmes lautet (nach den drei letzten Regeln):
+%let {y   = a * b       
+%    ;f x = (x + y) / y}
+%in  f c + f d          
+%Damit ist die Bedeutung des Programmes eindeutig und es ist klar, dass bspw. nicht das folgende gemeint war (in dieser alternativen Lesart ist das Token f aus der zweiten in die erste Zeile "gerutscht"):
+%let y = a * b f    
+%    x = (x + y) / y
+%in  f c + f d      
+%Aus diesen Layout-Regeln ergeben sich recht einfache Richtlinien für das Einrücken in Haskell-Programmen:
+%Die Zeilen einer Definition auf dem Top-Level beginnen jeweils ganz links (Spalte 1) im Quelltext.
+%Lokale where / let-Definitionen werden um mindestens ein Whitespace (typisch: 2 oder 4 Spaces oder 1 Tab) eingerückt.
+%Es gibt in Haskell ein weiteres Keyword (do, wird später thematisiert), das den gleichen Regeln wie where / let folgt.
+%\end{verbatim}
 \end{enumerate}
 \subsection{Lists([a])}
 \begin{itemize}
@@ -418,4 +454,129 @@ Sequence (lists of enumerable elements)
 \end{minted}
 \item Infinite List \Haskell{[1..]}
 \end{itemize}
+\section{Vorlesung 4}
+\subsection{Pattern Matching}
+\emph{The} idiomatic way to define functions by cases:
+\Haskell{f :: }$a_1$ \Haskell{->}$\ldots$\Haskell{->}$a_k$ \Haskell{-> b}\\
+\Haskell{f} $p_{11} \ldots p_{1k} = e_1\\$
+$\vdots\quad \vdots\quad \vdots\quad \vdots $\\
+\Haskell{f} $p_{m1} \ldots p_{nk} = e_n$\\
+For all $e_i$ \Haskell{:: b}
+on $a_i$ call \Haskell{f} $x_1x_2\ldots x_k$ each $x_i$ is matched against patterns $p_{i1}\ldots p_{in}$ in order. Result is $e_r$ if the rth branch is the first in which all patterns match.\\
+\begin{tabular}{lp{4cm}p{4cm}}
+Pattern&Matches if\ldots&Bindings in $e_r$\\\hline
+constant c&$x_1$ == c\\
+variable v&always& v = $x_i$\\
+wildcard \_ &always\\
+tuple ($p_1,\ldots,p_n$)&components of $x_i$ match type component patterns& Those bound by the component patterns\\
+$[]$& $x_i == []$\\
+$p_1:p_2$&\Haskell{head} $x_1$ matches $p_1$, \Haskell{tail} $x_i$ matches $p_2$\\
+$v@p$& p matches&those bound by $p$ and $v=x_i$
+\end{tabular}\\
+Note: In a pattern, a variable may only occur once (linear patterns only)
+\begin{listing}
+\caption{sum in Haskell}
+\begin{minted}{Haskell}
+--(1) if then else
+sum' :: [Integer] -> Integer
+sum' xs =
+   if xs == [] then 0 else head xs + sum' (tail xs)
+--(2) guards
+sum'' :: [Integer] -> Integer
+sum'' xs | xs == [] = 0
+         | otherwise = head xs + sum'' (tail xs)
+--(3) pattern matching
+sum''' :: [Integer] -> Integer
+sum''' []     = 0
+sum''' (x:xs) = x + sum''' xs
+
+main :: IO ()
+main = do
+  print $ sum' [1,2,3]
+  print $ sum'' [1,2,3]
+  print $ sum''' [1,2,3]
+\end{minted}
+\end{listing}
+\begin{listing}
+\caption{ageOf in Haskell}
+\begin{minted}{Haskell}
+type Dictionary a b = [(a,b)]
+type Person = String
+type Age = Integer
+
+people :: Dictionary Person Age
+people = [("Darth", 46), ("Chewie",200), ("Yoda", 902)]
+
+ageOf :: Dictionary Person Age -> Person -> Maybe Age
+-- The old way
+--ageOf pas p | fst (head pas) == p = snd (head pas)
+--            | otherwise           = ageOf (tail pas) p
+ageOf []          p'             = Nothing
+ageOf ((p,a):pas) p' | p == p'   = Just a
+                     | otherwise = ageOf pas p'
+
+main :: IO ()
+main = do
+  print $ ageOf people "Luke"
+\end{minted}
+\end{listing}
+\begin{listing}
+\caption{take in Haskell}
+\begin{minted}{Haskell}
+take' :: Integer -> [a] -> [a]
+take' 0 _ = []
+take' _ [] = []
+take' n (x:xs) = x:take' (n-1) xs
+
+
+main :: IO ()
+main = print $ take' 20 [1,3..]
+\end{minted}
+\end{listing}
+\begin{listing}
+\caption{merge in Haskell}
+\begin{minted}{Haskell}
+-- Merge two sorted lists respecting their orderings
+--
+-- merge (<) [0,3,5] [1,2,4] = [0,1,2,3,4,5]
+
+merge :: (a -> a -> Bool) -> [a] -> [a] -> [a]
+merge _       []      ys         = ys
+merge _       xs      []         = xs
+merge (<<<) l1@(x: xs) l2@(y:ys) | x <<< y   = x:merge (<<<) xs l2
+                                 | otherwise = y:merge (<<<) l1 ys
+
+main :: IO ()
+main = print $ merge (<) [1,3..19] [2,4..20]
+\end{minted}
+\end{listing}
+\begin{listing}
+\caption{mergeSort in Haskell}
+\begin{minted}{Haskell}
+--Sortes a list
+
+mergeSort :: (a -> a -> Bool) -> [a] -> [a]
+mergeSort _     []     = []
+mergeSort _     [x]    = [x]
+mergeSort (<<<) xs = merge (<<<) (mergeSort (<<<) ls)
+                                 (mergeSort (<<<) rs)
+  where
+    (ls,rs) = splitAt (length xs `div` 2) xs
+    merge :: (a -> a -> Bool) -> [a] -> [a] -> [a]
+    merge _         []         ys    = ys
+    merge _         xs         []    = xs
+    merge (<<<) l1@(x: xs) l2@(y:ys)
+      | x <<< y   = x:merge (<<<) xs l2
+      | otherwise = y:merge (<<<) l1 ys
+
+main :: IO ()
+main = print $ mergeSort (<) [1..100]
+\end{minted}
+\end{listing}
+\subsection{Pattern matching in expressions (case)}
+\begin{minted}[escapeinside=@@]{Haskell}
+case e of @$p_1$@ | @$q_{11}$@ -> @$e_{11}$@
+          @$\vdots$@
+          @$p_n$@ | @$q_{n1}$@ -> @$e_{n1}$@
+\end{minted}
 \end{document}

@@ -1,0 +1,16 @@
+type Dictionary a b = [(a,b)]
+type Person = String
+type Age = Integer
+
+people :: Dictionary Person Age
+people = [("Darth", 46), ("Chewie",200) ("Yoda", 902)]
+
+ageOf :: Dictionary Person Age -> Person -> Age
+ageOf pas p | fst (head pas) == p = snd (head pas)
+            | otherwise           = ageOf (tail pas) p
+
+ageOf ((p,a):pas) p' | p == p' = a
+
+main :: IO ()
+do
+  print $ ageOf people "Luke"
