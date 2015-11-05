@@ -12,6 +12,7 @@
 \setmonofont{Andale Mono}
 \usepackage[english]{babel}
 \author{Finn Ickler}
+\usepackage{mdframed}
 \usepackage{epigraph}
 \usepackage{minted}
 \renewcommand{\listingscaption}{Code example}
@@ -318,43 +319,58 @@ let @$g_1$@ ... = @$b_1$@
     @$g_2$@ ... = @$b_1$@
 in e
 \end{minted}
-%\begin{verbatim}
-%Hallo zusammen,
-%in der dritten Vorlesung hatte ich erwähnt, dass Haskells Syntax
-%darauf verzichtet, Blöcke (von Definitionen) mittels Sonderzeichen 
-%abzugrenzen und zu strukturieren.  Andere Programmiersprachen bedienen sich hier typischerweise Zeichen wie {, } und ;.
-%Haskell baut hingegen auf das sog. Layout, eine Art 2-dimensionaler Syntax.  Wer schon einmal Python und seine Konventionen zur Einrückung von Blöcken hinter for und if kennengelernt hat, wird hier Parallelen sehen. 
-%Die Regelungen zu Layout lauten wie folgt und werden vom Haskell-Compiler während der Parsing-Phase angewandt:
-%The first token after a where/let and the first token of a top-level definition define the upper-left corner of a box.
-%The first token left of the box closes the box (offside rule).
-%Insert a { before the box.
-%Insert a } after the box.
-%Insert a ; before each line that starts at left box border.
-%Die Anwendung dieser Regeln auf dieses Beispielprogramm:
-%let y   = a * b       
-%    f x = (x + y) / y 
-%in  f c + f d
-%führt zur Identifikation der folgenden Box:
-%   ┌──────────┄┄     
-%let│y   = a * b      
-%   │f x = (x + y) / y
-%   └──────────┄┄     
-%in  f c + f d        
-%Das Token in in der letzten Zeile steht links von der Boxgrenze im Abseits (siehe die offside rule).  Der Parser führt nun die Zeichen {, } und ; ein und verarbeitet das Programm so, als ob der Programmierer diese Zeichen explizit angegeben hätte.  (Haskell kann alternativ übrigens auch in dieser sog. expliziten Syntax geschrieben werden — das ist aber sehr unüblich, hat negativen Einfluss aufs Karma und ist vor allem für den Einsatz in automatischen Programmgeneratoren gedacht.)
-%Die explizite Form des obigen Programmes lautet (nach den drei letzten Regeln):
-%let {y   = a * b       
-%    ;f x = (x + y) / y}
-%in  f c + f d          
-%Damit ist die Bedeutung des Programmes eindeutig und es ist klar, dass bspw. nicht das folgende gemeint war (in dieser alternativen Lesart ist das Token f aus der zweiten in die erste Zeile "gerutscht"):
-%let y = a * b f    
-%    x = (x + y) / y
-%in  f c + f d      
-%Aus diesen Layout-Regeln ergeben sich recht einfache Richtlinien für das Einrücken in Haskell-Programmen:
-%Die Zeilen einer Definition auf dem Top-Level beginnen jeweils ganz links (Spalte 1) im Quelltext.
-%Lokale where / let-Definitionen werden um mindestens ein Whitespace (typisch: 2 oder 4 Spaces oder 1 Tab) eingerückt.
-%Es gibt in Haskell ein weiteres Keyword (do, wird später thematisiert), das den gleichen Regeln wie where / let folgt.
-%\end{verbatim}
 \end{enumerate}
+\section{Haskells 2-dimensionale Syntax (Layout) (Forumbeitrag)}
+\begin{mdframed}
+Hallo zusammen,\\
+in der dritten Vorlesung hatte ich erwähnt, dass Haskells Syntax darauf verzichtet, Blöcke (von Definitionen) mittels Sonderzeichen abzugrenzen und zu strukturieren. 
+Andere Programmiersprachen bedienen sich hier typischerweise Zeichen wie {, } und ;.\\
+Haskell baut hingegen auf das sog. Layout, eine Art 2-dimensionaler Syntax.  Wer schon einmal Python und seine Konventionen zur Einrückung von Blöcken hinter for und if kennengelernt hat, wird hier Parallelen sehen. 
+Die Regelungen zu Layout lauten wie folgt und werden vom Haskell-Compiler während der Parsing-Phase angewandt:
+\begin{itemize}
+\item The first token \textbf{after} a \Haskell{where/let} and the \textbf{first token of a top-level definition} define the upper-left corner of a box.
+\item The first token left of the box closes the box (offside rule).
+\item Insert a \textit{\{} before the box.
+\item Insert a \textit{\}} after the box.
+\item Insert a \textit{;} before each line that starts at left box border.
+\end{itemize}
+Die Anwendung dieser Regeln auf dieses Beispielprogramm:
+\begin{minted}{Haskell}
+let y   = a * b       
+    f x = (x + y) / y 
+in  f c + f d
+\end{minted}
+
+führt zur Identifikation der folgenden Box:
+\begin{verbatim}
+   ┌──────────┄┄     
+let│y   = a * b      
+   │f x = (x + y) / y
+   └──────────┄┄     
+\end{verbatim}
+\Haskell{in  f c + f d}\\  
+Das Token in in der letzten Zeile steht links von der Boxgrenze im Abseits (siehe die offside rule).  Der Parser führt nun die Zeichen {, } und ; ein und verarbeitet das Programm so, als ob der Programmierer diese Zeichen explizit angegeben hätte.  (Haskell kann alternativ übrigens auch in dieser sog. expliziten Syntax geschrieben werden — das ist aber sehr unüblich, hat negativen Einfluss aufs Karma und ist vor allem für den Einsatz in automatischen Programmgeneratoren gedacht.)\\
+Die explizite Form des obigen Programmes lautet (nach den drei letzten Regeln):
+\begin{minted}{Haskell}
+let {y   = a * b       
+    ;f x = (x + y) / y}
+in  f c + f d 
+\end{minted}     
+Damit ist die Bedeutung des Programmes eindeutig und es ist klar, dass bspw. nicht das folgende gemeint war (in dieser alternativen Lesart ist das Token f aus der zweiten in die erste Zeile "gerutscht"):
+\begin{minted}{Haskell}
+let y = a * b f    
+    x = (x + y) / y
+in  f c + f d   
+\end{minted}
+Aus diesen Layout-Regeln ergeben sich recht einfache Richtlinien für das Einrücken in Haskell-Programmen:
+\begin{itemize}
+\item Die Zeilen einer Definition auf dem Top-Level beginnen jeweils ganz links (Spalte 1) im Quelltext.
+\item Lokale where / let-Definitionen werden um mindestens ein Whitespace (typisch: 2 oder 4 Spaces oder 1 Tab) eingerückt.
+\item Es gibt in Haskell ein weiteres Keyword (do, wird später thematisiert), das den gleichen Regeln wie where / let folgt.
+\end{itemize}
+Beste Grüße,\\
+\phantom{ }\qquad —Torsten Grust
+\end{mdframed}
 \subsection{Lists([a])}
 \begin{itemize}
 \item Recursive definition:
