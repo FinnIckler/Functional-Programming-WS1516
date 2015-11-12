@@ -15,4 +15,4 @@ mergeSort (<<<) xs = merge (<<<) (mergeSort (<<<) ls)
       | otherwise = y:merge (<<<) l1 ys
 
 main :: IO ()
-main = print $ mergeSort (<=) [1..100]
+main = print $ mergeSort (<) [1..100]

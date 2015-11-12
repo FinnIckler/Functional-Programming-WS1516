@@ -180,7 +180,7 @@ Type Constructor& Description & Values\\
 \hline
 (a,b)&pairs of values of types a and b& \Haskell{(1,True) :: (Int, Bool)}\\
 ($\text{a}_1,\text{a}_2,\ldots,\text{a}_n$)& n-Types& \Haskell{2,False :: (Int, Bool)}\\
-\lbrack a\rbrack &list of values of type a & \Haskell{[] :: [a]}\\
+\Haskell{[a]} &list of values of type a & \Haskell{[] :: [a]}\\
 \Haskell{Maybe} a & optional value of type a & \Haskell{Just 42 Maybe Integer}\\
 & & \Haskell{Nothing :: Maybe a}\\
 \Haskell{Either} a b & Choice between values of Type a and b& \Haskell{Left 'x' :: Either Char b}\\
@@ -513,81 +513,21 @@ main = do
   print $ sum''' [1,2,3]
 \end{minted}
 \end{listing}
-\begin{listing}
+\begin{listing}\label{ageof.hs}
 \caption{ageOf in Haskell}
-\begin{minted}{Haskell}
-type Dictionary a b = [(a,b)]
-type Person = String
-type Age = Integer
-
-people :: Dictionary Person Age
-people = [("Darth", 46), ("Chewie",200), ("Yoda", 902)]
-
-ageOf :: Dictionary Person Age -> Person -> Maybe Age
--- The old way
---ageOf pas p | fst (head pas) == p = snd (head pas)
---            | otherwise           = ageOf (tail pas) p
-ageOf []          p'             = Nothing
-ageOf ((p,a):pas) p' | p == p'   = Just a
-                     | otherwise = ageOf pas p'
-
-main :: IO ()
-main = do
-  print $ ageOf people "Luke"
-\end{minted}
+\inputminted{Haskell}{ageOf.hs}
 \end{listing}
 \begin{listing}
 \caption{take in Haskell}
-\begin{minted}{Haskell}
-take' :: Integer -> [a] -> [a]
-take' 0 _ = []
-take' _ [] = []
-take' n (x:xs) = x:take' (n-1) xs
-
-
-main :: IO ()
-main = print $ take' 20 [1,3..]
-\end{minted}
+\inputminted{Haskell}{take.hs}
 \end{listing}
 \begin{listing}
 \caption{merge in Haskell}
-\begin{minted}{Haskell}
--- Merge two sorted lists respecting their orderings
---
--- merge (<) [0,3,5] [1,2,4] = [0,1,2,3,4,5]
-
-merge :: (a -> a -> Bool) -> [a] -> [a] -> [a]
-merge _       []      ys         = ys
-merge _       xs      []         = xs
-merge (<<<) l1@(x: xs) l2@(y:ys) | x <<< y   = x:merge (<<<) xs l2
-                                 | otherwise = y:merge (<<<) l1 ys
-
-main :: IO ()
-main = print $ merge (<) [1,3..19] [2,4..20]
-\end{minted}
+\inputminted[]{Haskell}{merges.hs}
 \end{listing}
 \begin{listing}
 \caption{mergeSort in Haskell}
-\begin{minted}{Haskell}
---Sortes a list
-
-mergeSort :: (a -> a -> Bool) -> [a] -> [a]
-mergeSort _     []     = []
-mergeSort _     [x]    = [x]
-mergeSort (<<<) xs = merge (<<<) (mergeSort (<<<) ls)
-                                 (mergeSort (<<<) rs)
-  where
-    (ls,rs) = splitAt (length xs `div` 2) xs
-    merge :: (a -> a -> Bool) -> [a] -> [a] -> [a]
-    merge _         []         ys    = ys
-    merge _         xs         []    = xs
-    merge (<<<) l1@(x: xs) l2@(y:ys)
-      | x <<< y   = x:merge (<<<) xs l2
-      | otherwise = y:merge (<<<) l1 ys
-
-main :: IO ()
-main = print $ mergeSort (<) [1..100]
-\end{minted}
+\inputminted{Haskell}{mergesort.hs}
 \end{listing}
 \subsection{Pattern matching in expressions (case)}
 \begin{minted}[escapeinside=@@]{Haskell}
@@ -595,4 +535,68 @@ case e of @$p_1$@ | @$q_{11}$@ -> @$e_{11}$@
           @$\vdots$@
           @$p_n$@ | @$q_{n1}$@ -> @$e_{n1}$@
 \end{minted}
+\section{Vorlesung 5}
+\subsection{Algebraic Data Types (Sum of Product Types)}
+\begin{itemize}
+\item Recall: \Haskell{[]} and \Haskell{(:)} are the \emph{constructors} for Type \Haskell{[a]}
+\item Can define entirely new Type T and its constructors $K_i$:
+\subitem \begin{tabbing}
+\Haskell{data T} $a_1\ a_2\ \ldots\ a_n $\=$ = K_1\ b{11}\ \ldots\ b_{1n_1}$\\
+\>\  $| K_2\ b_{21}\ \ldots\ b_{2n_2}$\\
+\>\  $\vdots\qquad \vdots$\\
+\>\  $| K_r\ b_{r1}\ \ldots\ b_{rnr}$
+\end{tabbing}
+\item Defines \emph{Type constructor} T and r \emph{value constructor} with types
+\item $\text{\Haskell{K}}_i$\Haskell{::}$b_{i1}\ldots\ b_{ini}$\Haskell{-> T}$a_1\ a_2\ldots\ a_n$
+\item $K_i$ identifier with uppercase first letter or symbol starting with \Haskell{:}
+\item Example: [weekday.hs]
+\subitem - Sum (or enumeration, choice)
+\end{itemize}
+\begin{listing}[h!]
+\caption{weekday.hs}
+\inputminted{Haskell}{weekday.hs}
+\end{listing}
+\begin{minted}[bgcolor = bg]{Haskell}
+Wed
+No instance for (Show Weekday) arising from a use of print
+Thu == Sun 
+No instance for (Eq Weekday) arising from a use of '=='
+Mon > Sat
+No instance for (Ord Weekday) arising form a use of '>'
+\end{minted}
+\begin{itemize}
+\item Add deriving \Haskell{(c,c,...,c)} to data declaration to define canonical (intuitive) operations:\\
+\begin{tabular}{l|l}
+c (class)&operations\\ \hline
+\Haskell{Eq}&equality (\Haskell{==,/=})\\
+\Haskell{Show}&printing (\Haskell{show})\\
+\Haskell{Ord}&ordering  (\Haskell{<,<=,max})\\
+\Haskell{Enum}&enumeration (\Haskell{[x..y]})\\
+\Haskell{Bounded}& bounds (\Haskell{minBound,maxBound})
+\end{tabular}
+\end{itemize}
+\begin{listing}[h!]
+\caption{RockPaperScissors.hs}
+\inputminted{Haskell}{RockPaperScissor.hs}
+\end{listing}
+\begin{listing}[h!]\label{sequence.hs}
+\caption{sequence.hs}
+\inputminted{Haskell}{sequence.hs}
+\end{listing}
+\begin{itemize}
+\item Product, r = 1, $n_1 = 2$ (\ref{sequence.hs})
+\item Sum of Products:
+\subitem \Haskell{Maybe a} = \Haskell{Nothing | Just a}
+\subitem \Haskell{data Either a b} = \Haskell{Left a | Right a}
+\subitem \Haskell{List a = Nil} 
+\subitem \phantom{List a}\ | \Haskell{Cons a (List a)}
+\end{itemize}
+\begin{listing}
+\caption{cons.hs}
+\inputminted{Haskell}{cons.hs}
+\end{listing}
+\begin{listing}
+\caption{eval-compile-run.hs}
+\inputminted{Haskell}{eval-compile-run.hs}
+\end{listing}
 \end{document}
