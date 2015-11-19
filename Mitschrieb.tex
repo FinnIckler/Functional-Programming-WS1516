@@ -2,6 +2,7 @@
 \title{Funktionale Programmierung Mitschrieb}
 \usepackage{fancyhdr}
 \pagestyle{fancy}
+\usepackage{hyperref}
 \usepackage{enumerate}
 \usepackage{amsmath}
 \usepackage{amsfonts}
@@ -18,6 +19,9 @@
 \renewcommand{\listingscaption}{Code example}
 \newcommand{\Haskell}[1]{\mintinline{Haskell}{#1}}
 \setcounter{secnumdepth}{-1}
+\hypersetup{%
+pdfborder = {0 0 0}
+}
 \begin{document}
 \maketitle
 \epigraph{\glqq Avoid success at all cost \grqq}{Simon Peyton Jones}
@@ -535,6 +539,7 @@ case e of @$p_1$@ | @$q_{11}$@ -> @$e_{11}$@
           @$\vdots$@
           @$p_n$@ | @$q_{n1}$@ -> @$e_{n1}$@
 \end{minted}
+\clearpage
 \section{Vorlesung 5}
 \subsection{Algebraic Data Types (Sum of Product Types)}
 \begin{itemize}
@@ -591,12 +596,132 @@ c (class)&operations\\ \hline
 \subitem \Haskell{List a = Nil} 
 \subitem \phantom{List a}\ | \Haskell{Cons a (List a)}
 \end{itemize}
-\begin{listing}
+\begin{listing}[h!]
 \caption{cons.hs}
 \inputminted{Haskell}{cons.hs}
 \end{listing}
-\begin{listing}
+\begin{listing}[h!]
 \caption{eval-compile-run.hs}
 \inputminted{Haskell}{eval-compile-run.hs}
 \end{listing}
+\clearpage
+\section{Vorlesung 6}
+\subsection{Type Classes}
+A Type class C defines a family of type signatures (''methods'') whichi all \emph{instances} of c must implement:\\
+\begin{minted}[escapeinside=||]{Haskell}
+class C where
+|$f_1$| :: |$t_1$|
+|$f_2$| :: |$t_2$|
+   |$\vdots$|
+|$f_n$| :: |$t_n$|
+\end{minted}
+The  $t_i$ \emph{must} mention a For any $f_i$, the class may provide default definitions (that instances may overwrite).\\
+\begin{itemize}
+\item Example
+\begin{minted}{Haskell}
+class Eq a where 
+(==) :: a -> a -> Bool
+(/=) :: a -> a -> Bool
+x /= y = not (x == y)
+x == y = not (x /= y)
+\end{minted}
+\end{itemize}
+\subsection{Class Constraints}
+A \emph{class constraint} \Haskell{e (a => :: t} (where t mentions a) says that e has type t \emph{only if} a is an instance of class C.\\
+\begin{minted}[bgcolor=bg]{Haskell}
+:t (+)
+(+) :: Num a => a -> a -> a
+:t print
+print :: Show a => a -> IO ()
+:hoogle +Data.List
+Data.List sort :: Ord a => [a] -> [a]
+:hoogle [(a,b)] -> a -> Maybe b
+lookup :: Eq a => a -> a [(a,b)] -> Maybe b
+\end{minted}
+\begin{listing}[h!]
+\inputminted{Haskell}{type-classes.hs}
+\caption{Default implementation of Show, Ord and Enum}
+\end{listing}
+\subsection{Class inheritance}
+Defining class $(c_1a,c_2a,\ldots)$ \Haskell{=>} (\Haskell{a where ...}) makes type class C a \emph{subclass} of the $c_1$ C inherits all methods of the $c_i$.\\
+(\Haskell{a => t} implies $(c_1a,c_2a,\ldots,Ca)$\Haskell{=> t})
+\clearpage
+\includegraphics[scale=0.7]{classes.png}
+\newpage
+\subsection{Class Instances}
+If type t implements the method of class C, t becomes an \emph{instance} of c:
+\begin{minted}[escapeinside=||]{Haskell}
+instance C t where
+|$f_1$| = <def of |$f_1$|> --all f may be
+       |$\vdots$|        --provided, minimal
+|$f_n$| = <def of |$f_n$|> --complete definition
+                --must be provided
+\end{minted}
+$\bullet$ Example:\\
+\begin{minted}{Haskell}
+instance Eq Bool where
+  x == y = (x && y) || (not x && not y)
+
+instance (Eq a, Eq b) => Eq (a,b) where
+  (x1,y1) == (x2,y2) = x1 == x2 && y1 == y2
+
+instance Eq a => Eq [a] where
+  [] == []         = True
+  (x:xs) == (y:ys) = x == y && xs == ys
+  _      == _      = False
+
+\end{minted}
+$\bullet$ An instance definition for type constructor t may formulate type constraints for its argument types: a, b ... :\\
+\Haskell{instance} ($c_1a,c_2,c_3b,\ldots)$ \Haskell{=>} 
+ \Haskell{(t a b) where}\\
+\begin{minted}[bgcolor=bg]{Haskell}
+:i Enum
+class Enum a where
+  succ :: a -> a
+  pred :: a -> a
+  toEnum :: Int -> a
+  fromEnum :: a -> Int
+  enumFrom :: a -> [a]
+  enumFromThen :: a -> a -> [a]
+  enumFromTo :: a -> a -> [a]
+  enumFromThenTo :: a -> a -> a -> [a]
+  	-- Defined in ‘GHC.Enum’
+instance Enum Word -- Defined in ‘GHC.Enum’
+instance Enum Ordering -- Defined in ‘GHC.Enum’
+instance Enum Integer -- Defined in ‘GHC.Enum’
+instance Enum Int -- Defined in ‘GHC.Enum’
+instance Enum Char -- Defined in ‘GHC.Enum’
+instance Enum Bool -- Defined in ‘GHC.Enum’
+instance Enum () -- Defined in ‘GHC.Enum’
+instance Enum Float -- Defined in ‘GHC.Float’
+instance Enum Double -- Defined in ‘GHC.Float’
+fromEnum 'A'
+65
+fromEnum 'B'
+66
+toEnum 65
+Exception: Prelude.Enum.().toEnum: bad argument
+:t toEnum 65
+toEnum 65 :: Enum a => a
+toEnum 65 :: Char
+'A'
+toEnum 0 :: Bool
+False
+toEnum 20 :: Double
+20.0
+\end{minted}
+\begin{listing}
+\caption{Rock paper Scissors with instances}
+\inputminted{Haskell}{RockPaperScissor-inheritance.hs}
+\end{listing}
+\subsection{Deriving Class Instances}
+\begin{itemize}
+\item Automatically made user-defined data (data ...) intsances of classes $c_i \in \{\text{\Haskell{Eq, Ord, Enum,Bounded, Show, Read}}\}$
+\begin{minted}[escapeinside=@@]{Haskell}
+data T @$a_1$@ @$a_2$@ ... @$a_n$@ = ...
+                       |
+  deriving (@$c_1$@..,@$c_n$@)
+\end{minted}
+\end{itemize}
+\inputminted{Haskell}{RockPaperScissor-deriving.hs}
 \end{document}
