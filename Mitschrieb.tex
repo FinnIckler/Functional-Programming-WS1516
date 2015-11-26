@@ -724,4 +724,95 @@ data T @$a_1$@ @$a_2$@ ... @$a_n$@ = ...
 \end{minted}
 \end{itemize}
 \inputminted{Haskell}{RockPaperScissor-deriving.hs}
+\clearpage
+\section{Vorlesung 7}
+\subsection{Domain Specific Languages}
+\begin{itemize}
+\item ''small languages'' designed to easily and directly express the concepts/idioms of a given domain. \emph{Not} Turing-complete in general. 
+\item Examples:\qquad
+\begin{tabular}{l|l}
+	Domain         & DSL               \\ \hline
+	Os automation  & Shell scripts     \\
+	Typesetting    & \TeX, \LaTeX      \\
+	Queries        & SQL               \\
+	Game Scripting & UnrealScript, Lua \\
+	Parsing        & Bison, ANTLR
+\end{tabular}
+\item Functional Languages are good hosts for Embedded DSLs:
+\subitem- algebraic data types (e.g model abstract syntax trees)
+\subitem- higher-order functions (e.g control constructs)
+\subitem- lightweight syntax (layout/whitespace, non-alphabetic identifiers)
+\end{itemize}
+Example: An embedded DSL for finite sets of integers:\\
+\begin{minipage}{.85\textwidth}
+\begin{minted}{Haskell}
+type IntegerSet = ...
+empty  :: IntegerSet
+insert :: Integer    -> IntegerSet -> IntegerSet
+delete :: Integer    -> IntegerSet -> IntegerSet
+member :: Integer    -> IntegerSet -> Bool
+\end{minted}
+\end{minipage}%
+\begin{minipage}{.15\textwidth}
+$\Biggl\} $construct.\\ \ \\
+$\}$ observer
+\end{minipage}\\
+\Haskell{member 3 (insert 1 (delete 3 (insert 2 (insert 3 empty))))} $\rightarrow$ \Haskell{False}\\
+DSL: \textcircled{1} Library of functions, implementaion details exposed
+\begin{listing}[h!]
+\caption{library-exposed.hs}
+\inputminted{Haskell}{library-exposed.hs}
+\end{listing}
+\subsection{Modules}
+Group related definitions (names, types) in a single file (named \verb|M.hs|)
+\begin{minted}{Haskell}
+module M where
+type Predicate a = a -> Bool
+id :: a -> a
+id = \x -> x
+\end{minted}
+Hierarchy : module A.B.C.M in file \verb|A/B/C/M.hs|
+\begin{itemize}
+\item definitions in other module M:\\
+\subitem \Haskell{import M}
+\item Explicit export Lists hode all other definitions
+\subitem \Haskell{module M (id) where ...}
+\subsubitem \Haskell{--type Predicate a not exported} 
+\item Abstract data types: export algebraic datatypes, but \emph{not} its constructor functions
+\subitem \Haskell{module M (Rose, leaf) where}
+\subitem \Haskell{data Rose a = Node a [Rose a] --constructor Node not exported}
+\subitem \Haskell{leaf :: a -> Rose a}
+\subitem \Haskell{leaf x = Node x []}
+\item Export constructors:
+\subitem \Haskell{module M (Rose (Node), leaf) where ...}
+\subitem \Haskell{module M (Rose (...), leaf)  where ...}
+\item Qualified imports to partition space:
+\subitem \Haskell{import qualified M [as Nickname]}
+\subitem \Haskell{t :: M.Rose Char}
+\subitem \Haskell{t = M.leaf 'x'}
+\end{itemize}
+\begin{minted}[bgcolor =bg]{Haskell}
+:t fromJust
+Not in scope: ‘fromJust’
+import Data.Maybe
+:t fromJust
+fromJust :: Maybe a -> a
+
+import qualified Data.Maybe
+:t Data.Maybe.fromJust
+Data.Maybe.fromJust :: Maybe a -> a
+
+import qualified Data.Maybe as DM
+:t DM.fromJust
+DM.fromJust :: Maybe a -> a
+\end{minted}
+\begin{itemize}
+\item Partially import module:
+\subitem \Haskell{import Data.List (nub,maybe)}
+\subitem \Haskell{import Prelude hiding (otherwise)}
+\subitem \Haskell{otherwise :: Bool}
+\subitem \Haskell{otherwise = False}
+\end{itemize}
+\inputminted{Haskell}{SetLanguage.hs}
+\inputminted{Haskell}{SetlanguageFunction.hs}
 \end{document}
