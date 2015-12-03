@@ -818,5 +818,88 @@ DM.fromJust :: Maybe a -> a
 \inputminted{Haskell}{SetLanguage.hs}
 \inputminted{Haskell}{SetlanguageFunction.hs}
 \end{listing}
-
+\clearpage
+\section{Vorlesung 8}
+\begin{itemize}
+\item Shallow DSL embedding : Semantiics of DSL operations directly expressed in terms of a host language value (e.g list or characteristic function).
+\subitem- constructors (\Haskell{empty,insert,delete}) perform the work, harder to add
+\subitem- Observer (\Haskell{member}) trivial
+\item \emph{Deep} DSL embedding: DSL operations build an abstract syntax Tree (AST) that represents applications and arguments
+\subitem- constructors merely build the AST, very easy to add
+\subitem- observer: interpret (traverse) the AST and perform the work
+\end{itemize}
+\begin{listing}[h!]
+\caption{SetLanguageDeep.hs}
+\inputminted{Haskell}{SetLanguageDeep.hs}
+\end{listing}
+\begin{minted}[bgcolor=bg]{Haskell}
+:i Num
+class Num a where
+  (+) :: a -> a -> a
+  (-) :: a -> a -> a
+  (*) :: a -> a -> a
+  negate :: a -> a
+  abs :: a -> a
+  signum :: a -> a
+  fromInteger :: Integer -> a
+  	-- Defined in ‘GHC.Num’
+instance Num Word -- Defined in ‘GHC.Num’
+instance Num Integer -- Defined in ‘GHC.Num’
+instance Num Int -- Defined in ‘GHC.Num’
+instance Num Float -- Defined in ‘GHC.Float’
+instance Num Double -- Defined in ‘GHC.Float’
+:t 42
+42 :: Num a => a
+default ()
+42
+<interactive>:5:1:
+    No instance for (Num a0) arising from a use of ‘it’
+    The type variable ‘a0’ is ambiguous
+    Note: there are several potential instances:
+      instance Integral a => Num (GHC.Real.Ratio a)
+        -- Defined in ‘GHC.Real’
+      instance Num Integer -- Defined in ‘GHC.Num’
+      instance Num Double -- Defined in ‘GHC.Float’
+      ...plus three others
+    In the first argument of ‘print’, namely ‘it’
+    In a stmt of an interactive GHCi command: print it
+default (Integer,Rational, Double)
+42
+42
+42 / 3
+14 % 1
+42.1
+421 % 10
+default (Integer,Double)
+\end{minted}
+\begin{listing}[h!]
+\caption{ExprDeepNum.hs}
+\inputminted{Haskell}{ExprDeepNum.hs}
+\end{listing}
+\begin{listing}[h!]
+\caption{ExprDeepNum.hs}
+\inputminted{Haskell}{ExprDeep.hs}
+\end{listing}
+\clearpage
+\subsection{Generalized Algebraic Datatypes}
+Idea :
+\begin{itemize}
+\item Encode the type of a DSL expression (here : Integer or Bool) in its \emph{Haskell type}
+\item Use Haskell's type checker to ensure at \emph{compile time} that only well-typed DSL expressions are built:
+\end{itemize}
+\subsection{GADTs}
+\begin{itemize}
+\item Language extensions: \Haskell{{-# LANGUAGE GADTs #-}}
+\item Define entirely new parameters \Haskell{Type T}, its (value) constructors $k_i$ and their type signatures
+\begin{minted}[escapeinside=||]{Haskell}
+data T |$a_1\ a_2\ \ldots\ a_n$| where
+  |$k_1$| :: |$b_{11}$| -> ... |$b_{1n_1}$| -> T |$t_{11}\ t_{12} \ldots\ t_{1n}$|
+  |$k_2$| :: |$b_{21}$| -> ... |$b_{2n_2}$| -> T |$t_{21}\ t_{22} \ldots\ t_{2n}$|
+...
+\end{minted}
+\end{itemize}
+\begin{listing}[h!]
+\caption{ExprDeepTyped.hs}
+\inputminted{Haskell}{ExprDeepTyped.hs}
+\end{listing}
 \end{document}
