@@ -902,4 +902,40 @@ data T |$a_1\ a_2\ \ldots\ a_n$| where
 \caption{ExprDeepTyped.hs}
 \inputminted{Haskell}{ExprDeepTyped.hs}
 \end{listing}
+\clearpage
+\section{Vorlesung 9}
+\begin{listing}[h!]
+\caption{ExprEmbedding.hs}
+\inputminted{Haskell}{ExprEmbedding.hs}
+\end{listing}
+\begin{listing}
+\caption{expr-embeddings.hs}
+\inputminted{Haskell}{expr-embeddings.hs}
+\end{listing}
+\subsection{Shallow Embedding of a String Matching DSL}
+\begin{itemize}
+\item Pattern:
+\begin{enumerate}[1.]
+\item Given a string, a pattern returns a \emph{list of matches.} Match failure?\marginpar{Replace failure by a list of successes} return the \emph{empty list} (of matches)
+\item A match consists of a value (e.g the match of characters, tokens parse tree) and the residual string to match\\
+Thus: \Haskell{type Pattern a = String -> [(a,String)]}
+\epigraph{A pattern of things is list of things and strings}{Torsten Grust, 10.12.2015}
+\end{enumerate} 
+\item DSL design:\\
+\begin{tabular}{l|l}
+Pattern& DSL Function \Haskell{Char -> String ([Char,String])}\\ \hline
+match literal& \Haskell{lit :: Char -> Pattern Char}\\
+match empty string& \Haskell{empty :: a -> Pattern a}\\
+fail always & \Haskell{fail :: Pattern a}\\
+alternative &\Haskell{alt :: Pattern a -> Pattern a -> Pattern a}\\
+sequence &\Haskell{seq ::(a ->  b -> c)-> Pattern a -> Pattern b -> Pattern c}\\
+repetition & \Haskell{Pattern a -> Pattern [a]}
+\end{tabular}
+\end{itemize}
+\begin{listing}
+\inputminted{Haskell}{PatternMatching.hs}
+\end{listing}
+\begin{listing}
+\inputminted{Haskell}{pattern-match.hs}
+\end{listing}
 \end{document}
