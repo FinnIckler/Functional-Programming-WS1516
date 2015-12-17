@@ -14,6 +14,7 @@
 \usepackage[english]{babel}
 \author{Finn Ickler}
 \usepackage{mdframed}
+\usepackage{tikz}
 \usepackage{epigraph}
 \usepackage{minted}
 \renewcommand{\listingscaption}{Code example}
@@ -938,4 +939,137 @@ repetition & \Haskell{Pattern a -> Pattern [a]}
 \begin{listing}
 \inputminted{Haskell}{pattern-match.hs}
 \end{listing}
+\clearpage
+\section{Vorlesung 10}
+\subsection{Lazy Evaluation}
+To execute a programm, Haskell \emph{reduces} expression to values. Haskell uses \emph{normal order reduction} to select the next expression to reduce:
+\begin{itemize}
+\item The \emph{outermost} reducable expression (redex) is reduced first.
+\item $\Rightarrow$ Function application are reduced first \emph{before} their arguments.
+\item If no further redex is found, the expression is in \emph{normal form}. and reduction terminates.
+\end{itemize}
+\begin{minted}[escapeinside=||]{Haskell}
+fst :: (a,b) -> a
+fst (x,y) = x
+sqr :: Num a => a -> a
+sqr x = x * x
+---------------
+fst (sqr (1 + 3), sqr 2) |$\rightarrow$| sqr (1 + 3)        [fst]
+                         |$\rightarrow$| (1 + 3) * (1 + 3)  [sqr]
+                         |$\rightarrow$| 4 * 4              [+/+]
+                         |$\rightarrow$| 16                 [*]
+\end{minted}
+\begin{minted}{racket}
+(define-racket-procedures pair
+  make-pair
+  pair?
+  (pair-fst)
+  (pair-snd))
+
+(define fst
+  (lambda (p)
+    (pair-fst p)))
+
+(define sqr 
+  (lambda (x) (* x x)))
+
+;Racket uses applicative order reduction (innermost first)
+\end{minted}
+\begin{listing}[h!]
+\caption{This Programm compiles in Haskell, but not in Racket}
+\inputminted[]{Haskell}{bomb.hs}
+\end{listing}
+Haskell avoids the duplication of work through \emph{graph reduction}: Expression are shared (referenced more than once) instead of duplicated. Reduction of \Haskell{sqr (1 + 3)}:\\
+\begin{tikzpicture}
+\node at (0,0) {sqr};
+\draw (0,0) -- (0,-1);
+\node at (0,-1) {+};
+\draw (0,-1) -- (0.25,-1.25);
+\node at (0.25,-1.25) {3};
+\draw (0,-1) -- (-0.25,-1.25);
+\node at (-0.25,-1.25) {1};
+\end{tikzpicture}$\rightarrow$
+\begin{tikzpicture}
+\node at (0,0) {*};
+\draw (0,0) -- (0,-1);
+\node at (0,-1) {+};
+\draw (0,-1) -- (0.25,-1.25);
+\node at (0.25,-1.25) {3};
+\draw (0,-1) -- (-0.25,-1.25);
+\node at (-0.25,-1.25) {1};
+\end{tikzpicture}\\
+Lazy evaluation: normal order reduction + sharing + WHNF\\
+\emph{thunks}
+\subsection{WHNF}
+An expression $e$ ist in \emph{weak head normal form} (WHNF) if it is of the following form:\\
+\newcommand{\iu}[1]{\textcircled{\raisebox{-0.1em}{#1}}}
+\begin{enumerate}[\iu{1}]
+\item \Haskell{v} (where \Haskell{v} is an \emph{atomic} value \Haskell{Integer, Char, Bool,...})
+\item[\iu{2}] $c\ e_1\ e_2\ \ldots e_n$ (where $c$ is an n-ary constructor (like \Haskell{(:)} ))
+\item[\iu{3}] $f\ e_1\ e_2 \ \ldots e_m$ (where f is a n-ary function, $m < n$)
+\end{enumerate}
+Haskell reduces values to WHNF only (stop criteria for reducion) unless we request reduction to normal fprm (e.g when printing result)\\
+\subsection{Example expressions in WHNF}
+\begin{minted}[escapeinside=||]{Haskell}
+42 -- |\iu{1}|
+(sqr 2,sqr 4) -- |\iu{2}|
+f x = map f xs -- |\iu{2}| (:)
+Just (40 + 2) -- |\iu{2}| Just
+(* (40 + 2)) --  |\iu{3}| * binary
+(\x -> 40 + 2) --  |\iu{3}| * binary
+\end{minted}
+\begin{minted}[bgcolor=bg]{Haskell}
+(1 + 3) : []
+[4]
+it :: [Integer]
+let xs = (1 + 3) : []
+xs :: [Integer]
+:sprint xs 
+xs = [_]
+\end{minted}
+\subsection{Lazy Evaluation and Bottom ($\perp$)}
+Some Haskell expressions have the value \emph{bottom} ($perp$) Examples: \Haskell{error ".."}, \Haskell{undefined}, \Haskell{bomb}. Lazy evaluation admits functions that return a non-bottom value even if they receive $\perp$ as an argument (also:{\em non-Strict functions }).
+N-ary function is \emph{strict} in its i-th argument, if $f\ x_1\ \ldots\ x_{i-1} \perp x_{i+1} \ldots x_n = \perp$\\
+Examples:
+\begin{itemize}
+\item \Haskell{const :: a -> b -> a} strict in first, non-strict in second argument
+\item \Haskell{(&&) :: Bool -> Bool -> Bool}
+\end{itemize}
+$\bigtriangleup\! \hspace*{-0.45em}!\hspace*{0.45em}$ If a function \emph{pattern matches} an argument, Haskell semantics define it to be strict in that argument.\\
+Example:\\
+\begin{minted}[escapeinside=||]{Haskell}
+data T = T Int
+f :: T -> Int
+f (T x) = 42
+f undefined     |$\rightarrow$| undefined
+f (T undefined) |$\rightarrow$| 42
+\end{minted}
+\begin{listing}[h!]
+\inputminted{Haskell}{bottom.hs}
+\caption{Bottom type}
+\end{listing}
+\begin{listing}[h!]
+\inputminted{Haskell}{min.hs}
+\caption{Finding the minimum by sorting the list}
+\end{listing}
+\begin{minted}[escapeinside=||]{Haskell}
+min [8,6,1,7,5] |$\rightarrow$| (head . isort (<)) [8,6,1,7,5]  [min]
+|$\rightarrow$| head (isort (<) [8,6,1,7,5])                    [(.)]
+|$\rightarrow$| head (ins 8 (ins 6 (ins 1 (ins 7 (ins 5 []))))) [isort.2*]
+|$\rightarrow$| head (ins 8 (ins 6 (ins 1(ins 7 [8]))))         [ins.1]
+|$\rightarrow$| head (ins 8 (ins 6 (ins 1 (5 : ins 7 []))))     [ins.3]
+|$\rightarrow$| head (ins 8 (1 : ins 6 ( 5 : ins 7 [])))        [ins.2]
+|$\rightarrow$| (1 : ins 8 (ins 6 (5 : ins 7 [])))              [ins.3]
+|$\rightarrow$| 1
+\end{minted}
+\begin{minted}[bgcolor=bg]{Haskell}
+min [1..1000000]
+1
+it :: Integer
+(1.50 secs, 521,738,256 bytes)
+min [1..10000000]
+1
+it :: Integer
+(15.43 secs, 5,164,721,896 bytes)
+\end{minted}
 \end{document}
