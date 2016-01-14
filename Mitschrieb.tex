@@ -7,6 +7,7 @@
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{amssymb}
+\usepackage{nicefrac}
 \fancyhf{}
 \fancyhead[C]{Torsten Grust - Functional Programming}
 \usepackage{fontspec}
@@ -1072,4 +1073,36 @@ min [1..10000000]
 it :: Integer
 (15.43 secs, 5,164,721,896 bytes)
 \end{minted}
+\clearpage
+\section{Vorlesung 11}
+\subsection{Infinite Lists (Data Structures)}
+One consequence of lazy evaluation, programs can handle \emph{infinite Lists} as long as any run will inspect onlt a finite prefix of such a list.\\
+Enables a modular programming style:\\
+\begin{enumerate}
+\item \textbf{generator functions} produce an infinite number of solutions/approximations
+\item \textbf{test functions} select one (or finite number of) solutions from this infinie list)
+\end{enumerate}
+Example: Newton-Raphson square root approximation
+Iteratively approximate the square root of $x$
+\begin{enumerate}
+\item $a_0 = \nicefrac{x}{2}$
+\item $a_{i+1} = \nicefrac{(a_i + \nicefrac{x}{a_i})}{2}$\hfill$a = (a + \nicefrac{x}{a}/2) \Leftrightarrow a = \sqrt{x}$
+\end{enumerate}
+\inputminted{Haskell}{sqrt.hs}
+Example (Tic-Tac-Toe game tree):\\
+Build the (potentially huge) \emph{tree of possible moevs} for the Tic-Tac-Toe Board game. Evaluate promise of game position.\\
+Plan:\\
+\begin{enumerate}
+\item[\textcircled{1}] Find representation of game position (board + player next up)\\
+\begin{tabular}{|l|l|l|}
+\hline
+1&2&3 \\ \hline
+4&5&6 \\ \hline
+X&O&X \\ \hline
+\end{tabular}
+\item[\textcircled{2}]provide pretty-printing for game
+\item[\textcircled{3}]Define initial position and possible moves : \Haskell{moves :: Position -> [Position]}
+\item[\textcircled{4}] Evaluate a given position: \Haskell{static :: Position -> Int}
+\end{enumerate}
+\inputminted{Haskell}{tic-tac-toe.hs}
 \end{document}
