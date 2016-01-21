@@ -6,7 +6,7 @@
 *.fls
 *.out
 *.toc
-
+*.hs
 ## Intermediate documents:
 *.dvi
 *-converted-to.*

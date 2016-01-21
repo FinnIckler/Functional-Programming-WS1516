@@ -1103,6 +1103,60 @@ X&O&X \\ \hline
 \item[\textcircled{2}]provide pretty-printing for game
 \item[\textcircled{3}]Define initial position and possible moves : \Haskell{moves :: Position -> [Position]}
 \item[\textcircled{4}] Evaluate a given position: \Haskell{static :: Position -> Int}
+\item[\textcircled{5}] Build a game tree of positions:\\
+\Haskell{gameTree :: Position -> Tree Position}
+\item[\textcircled{6}] Pattern than simple statci evaluate now evaluate portions based on possible game futures:\\
+gameTree,position evaluate bottom up
+\item[\textcircled{7}] Optimization ($\alpha-\beta$-algorithm)
 \end{enumerate}
 \inputminted{Haskell}{tic-tac-toe.hs}
+\clearpage
+\section{Vorlesung 12}
+\subsection{Functor}
+Type class Functor embodies the application of a functor to the elements (or: inside) if a structure. while leaving structure (or: outside) alone.\\
+\emph{Examples:}\\
+\Haskell{map :: (a -> b) -> [a] -> [b]}\\
+\Haskell{mapTree :: (a -> b) -> Tree a -> Tree b}
+\begin{minted}{Haskell}
+class Functor f where
+  fmap :: (a -> b) -> f a -> f b
+\end{minted}
+\begin{itemize}
+\item Note: $f$ is a \emph{type constructor} that receives exactly one argument (Functor is also called a \emph{constructor class})\\
+Examples:\\
+\begin{minted}{Haskell}
+instance Functor [] where
+  fmap = map
+
+instance Functor Tree where
+  fmap = mapTree
+
+instance Functor Maybe where
+fmap f (Just x) = Just (f x)
+fmap f Nothing  = Nothing
+\end{minted}
+\end{itemize}
+Type constructors can be partially applied, Uses prefix notation:\\
+\Haskell{a -> b} $\equiv$ \Haskell{(->) a b}\\
+\Haskell{(a,b)}  $\equiv$ \Haskell{(,) a b}\\
+\Haskell{[a]}  $\equiv$ \Haskell{[] a b}\\
+Examamples (deffine type constructors):\\
+\Haskell{Type Flagged   = (,) Bool}\\
+\Haskell{Type Indexed   = (->) Int}\\
+\Haskell{Type MayFail e = Either e}
+\begin{minted}{Haskell}
+instance Functor (Either e) where
+  fmap f (Left e)  = Left e 
+  fmap f (Right e) = Right (f x)
+\end{minted}
+%\inputminted[]{Haskell}{round.hs}
+\begin{minted}{Haskell}
+instance Functor Flagged where
+  fmap f (b,x)) = (b,f x)
+--fmap :: (a -> b) -> (,) Bool a -> (,) Bool b
+
+instance Functor Indexed where
+  fmap f g = f . g
+--fmap :: (a->b) -> (Int -> a) -> (Int -> b)
+\end{minted}
 \end{document}
