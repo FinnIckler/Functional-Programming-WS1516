@@ -1088,7 +1088,10 @@ Iteratively approximate the square root of $x$
 \item $a_0 = \nicefrac{x}{2}$
 \item $a_{i+1} = \nicefrac{(a_i + \nicefrac{x}{a_i})}{2}$\hfill$a = (a + \nicefrac{x}{a}/2) \Leftrightarrow a = \sqrt{x}$
 \end{enumerate}
+\begin{listing}
 \inputminted{Haskell}{sqrt.hs}
+\caption{Newtonsches Wurzelverfahren}
+\end{listing}
 Example (Tic-Tac-Toe game tree):\\
 Build the (potentially huge) \emph{tree of possible moevs} for the Tic-Tac-Toe Board game. Evaluate promise of game position.\\
 Plan:\\
@@ -1109,7 +1112,10 @@ X&O&X \\ \hline
 gameTree,position evaluate bottom up
 \item[\textcircled{7}] Optimization ($\alpha-\beta$-algorithm)
 \end{enumerate}
+\begin{listing}
+\caption{Tic Tac Toe Spielbaum}
 \inputminted{Haskell}{tic-tac-toe.hs}
+\end{listing}
 \clearpage
 \section{Vorlesung 12}
 \subsection{Functor}
@@ -1192,7 +1198,10 @@ Z :: (* -> *) -> * -> *
 \item \Haskell{fmap id = id}
 \item \Haskell{fmap f . fmap g = fmap (f . g)}
 \end{enumerate}
+\begin{listing}
+\caption{Using the Functor Laws}
 \inputminted{Haskell}{Pred.hs}
+\end{listing}
 \clearpage
 \section{Vorlesung 13}
 \subsection{Applicative}
@@ -1326,4 +1335,155 @@ instance Applicative [] where
   pure x    = [x]
   fs <*> xs = [f x | f <- fs, x <- xs] 
 \end{minted}
+\clearpage
+\section{Vorlesung 14}
+\subsection{Sequencing Functions}
+\begin{minted}{Haskell}
+(.) :: (b -> c) -> (a -> b) -> (a -> c)
+f . g =\x -> f (g x)
+(>=>) :: (a -> b) -> (b -> c) -> (a -> c)
+f >=> g = g . f  
+\end{minted}
+\begin{itemize}
+\item $f_1 {>=>} f_2 {>=>} \ldots {>=>} f_n$ composes the $f_i$ in left to right order (think UNIX pipes)
+\item \Haskell{(>=>),id} forms a Monoid
+\end{itemize}
+\subsection{Sequencing partial functions (a -> Maybe b)}
+\begin{itemize}
+\item Return Nothing as soon as first function in pipeline returns Nothing.
+\begin{minted}{Haskell}
+(>=>) :: (a -> Maybe b) -> (b -> Maybe c) -> (a -> Maybe b)
+f >=> g = \x -> case f  x of
+                     Nothing -> Nothing
+                     Just y -> g y
+                     
+\end{minted}
+\end{itemize}
+\begin{listing}
+\inputminted{Haskell}{Sequence-Maybe.hs}
+\caption{Sequencing Maybe Functions}
+\end{listing}
+\subsection{Sequencing exception-generating functions (a -> Exc b)}
+\begin{minted}{Haskell}
+type Exc b = Either Error b
+type Error = String
+\end{minted}
+\begin{itemize}
+\item Exceptions are propagated once occured
+\begin{minted}{Haskell}
+(>=>) :: (a -> Exc b) -> (b -> Exc c) -> (a -> Exc c)
+f >=> g = \x -> case f x of
+                     Left err -> Left err
+                     Right y  -> g y
+\end{minted}
+\end{itemize}
+\begin{listing}
+\inputminted{Haskell}{sequence-Either.hs}
+\caption{Sequencing Either Functions}
+\end{listing}
+Sequencing non-deterministic functions (a -> NonDet b)
+\begin{itemize}
+\item Non-deterministic any answer in a list of answers : \Haskell{type NonDet b = [b]}
+\item Take all possible answers into account:
+\begin{minted}{Haskell}
+(>=>) :: (a -> NonDet b) -> (b -> NonDet c) -> (a -> NonDet c)
+f >=> g = \x -> concat [g y | y <- f x]
+\end{minted}
+\end{itemize}
+\begin{listing}
+\caption{Sequencing Non Deterministic Functions}
+\inputminted[]{Haskell}{sequence-NonDet.hs}
+\end{listing}
+\clearpage
+\subsection{Sequencing "stateful" functions a -> State -> (State, b)}
+\begin{itemize}
+\item Sate Transformer: \Haskell{type ST b = State -> (State,b)}
+\item Stateful functions: \Haskell{a -> ST b}
+\begin{minted}{Haskell}
+(>=>) :: (a -> ST b) -> (b -> ST c) -> (a -> ST a)
+f >=> g = \x s0 -> let (s1 ,y) = f x s0 in g y s1
+\end{minted}
+\end{itemize}
+\begin{listing}
+\caption{Sequencing stateful Functions}
+\inputminted[]{Haskell}{sequence-ST.hs}
+\end{listing}
+\clearpage
+\subsection{Sequencing side-effecting functions a -> World (World, b)}
+\begin{itemize}
+\item Side effects: functions consume current world, return new world along with result:
+\Haskell{type World = ... --abstract (defined by Haskell runtime)}\\
+\Haskell{type IO b = World -> (World b)}
+\item Value of type IO b : an \emph{action} that
+\begin{enumerate}[1.]
+\item when performed has a side-effect in the world and then
+\item returns a value of type b
+\end{enumerate}
+\item Haskell built-ins
+\begin{itemize}
+\item \Haskell{print :: Show a => a -> IO ()}
+\item \Haskell{putStrln :: String -> IO ()}
+\item \Haskell{getLine :: IO String}
+\item \Haskell{readFile :: FilePath -> IO String}
+\end{itemize}
+\begin{minted}[bgcolor=bg]{Haskell}
+:i IO
+newtype IO a
+  = GHC.Types.IO (GHC.Prim.State# GHC.Prim.RealWorld
+                  -> (# GHC.Prim.State# GHC.Prim.RealWorld, a #))
+  	-- Defined in ‘GHC.Types’
+instance Monad IO -- Defined in ‘GHC.Base’
+instance Functor IO -- Defined in ‘GHC.Base’
+instance Applicative IO -- Defined in ‘GHC.Base’
+\end{minted}
+\end{itemize}
+\Haskell{(>=>) :: (a -> m b) -> (b -> m c) -> (a -> mc)}
+\begin{minted}{Haskell}
+class Applicative m => Monad m where
+  return :: a -> m a
+  (>>=) :: m a -> (a -> m b) -> m b --bind
+\end{minted}
+\begin{itemize}
+\item Lifting: \begin{tabular}{l|l}
+Monad & Lifting (return x)\\
+Maybe & \Haskell{Just x}\\
+Exc   & \Haskell{Right x}\\
+NonDet& \Haskell{[x]}\\
+ST    & \Haskell{\s -> (s,x)}
+\end{tabular}
+\item Make Maybe an instance of Monad:
+\begin{minted}{Haskell}
+instance Monad Maybe where
+  return x = Just x -- return = Just
+  Nothing >>= g = Nothing
+  Just x  >>= g = gx
+
+(>=>) :: Monad m => (a -> m b) -> (b -> m c) -> (a -> mc) -- Kleisli composition
+f >=> g = \x -> f x >>= g
+\end{minted}
+\item Let m be a Monad. Then m is also an Applicative:
+\begin{minted}{Haskell}
+Applicate m where 
+  pure x = return
+  u <*> v = u >>= \f -> v >>= \x -> return (f x)
+
+(<$>) :: Functor m     =>   (a -> b) -> m a -> m b
+(<*>) :: Applicative m => m (a -> b) -> m a -> m b
+(=<<) :: Monad m       => (a -> m b) -> m a -> m b
+\end{minted}
+\end{itemize}
+\clearpage
+\subsection{do-Notation}
+(e expression of type m a, es : sequence of ,-seperataed expression)
+\begin{minted}{Haskell}
+do {e}          = e
+do {x <- e; es} = e >>= \x -> do {es}
+do {e;es}       = e >>= \_ -> do {es}
+
+do {let v = x, es} = let v = x in do {es}
+\end{minted}
+\begin{listing}
+\caption{Do notation for Monads}
+\inputminted[]{Haskell}{monadic-ST.hs}
+\end{listing}
 \end{document}
