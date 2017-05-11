@@ -10,8 +10,8 @@
 \usepackage{nicefrac}
 \fancyhf{}
 \fancyhead[C]{Torsten Grust - Functional Programming}
-%\usepackage{fontspec}
-%\setmonofont{Andale Mono}
+\usepackage{fontspec}
+\setmonofont{Andale Mono}
 \usepackage[english]{babel}
 \author{Finn Ickler}
 \usepackage{mdframed}
@@ -1171,7 +1171,7 @@ kind&describes&example\\
 $\ast$&types&\Haskell{Int,Bool,(Int,Bool),[Char]}\\
 $\ast$ -> $\ast$&unary Type constuctors&\Haskell{Maybe,[]}\\
 x -> x -> x&binary Type constructors&\Haskell{Either, (,), (->)}
-\end{tabular}
+\end{tabular} \\
 \begin{minted}[bgcolor=bg]{Haskell}
 :k Int
 Int :: *
