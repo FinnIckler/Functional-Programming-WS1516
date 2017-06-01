@@ -9,7 +9,7 @@ stdenv.mkDerivation {
   buildInputs = with pkgs; [
     texlive.combined.scheme-full
     python35Packages.pygments
-    bash
+    which
   ];
 
   buildPhase = ''
@@ -17,6 +17,7 @@ stdenv.mkDerivation {
   '';
 
   installPhase = ''
+    mkdir -p $out
     cp Mitschrieb.pdf $out/
   '';
 }
